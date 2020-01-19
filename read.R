@@ -224,7 +224,7 @@ xtabs(cw$ProsCashBail ~ cw$CashBailSet)
 # calculate average time from start to end? by court?
 
 
-
+# ------------ Back to Cleaning -------------- #
 #### Cleaning the Offenses 
 
 cw_charges <- 
