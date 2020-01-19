@@ -6,7 +6,7 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, warning = FALSE, fig.width = 8)
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, fig.width = 12)
 library(tidyverse)
 library(table1)
 library(knitr)
@@ -53,6 +53,22 @@ cw %>%
     Result = fct_explicit_na(Result),
     ChargesCategorized = fct_explicit_na(ChargesCategorized)
 )
+
+label(table1data$DefRace) <- "Defendant Race"
+label(table1data$DefGender) <- "Defendant Gender"
+label(table1data$DefEstimatedAge) <- "Defendant Estimated Age"
+label(table1data$DefRepByCounsel) <- "Defendant Represented by Counsel"
+label(table1data$ChargesCategorized) <- "Primary Charge"
+label(table1data$Assault.Violent.DV) <- "Violent Crime, Assault, or DV"
+label(table1data$Drug.Related) <- "Drug Related"
+label(table1data$CashBailSet) <- "Cash Bail Set"
+label(table1data$CaseResolved) <- "Case Resolved"
+
+
+
+
+label(table1data$ProsCashBail) <- "Prosecution Requests Cash Bail"
+
 
 table1(~ DefRace + DefGender + DefEstimatedAge + DefRepByCounsel + ChargesCategorized + Assault.Violent.DV + Drug.Related + ProsCashBail + CashBailSet + CaseResolved + Result | WhichCourt, data = table1data)
 ```
