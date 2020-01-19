@@ -8,7 +8,7 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, fig.width = 8)
 library(tidyverse)
-library(tableone)
+library(table1)
 library(knitr)
 library(kableExtra)
 
@@ -54,7 +54,7 @@ cw %>%
     ChargesCategorized = fct_explicit_na(ChargesCategorized)
 )
 
-CreateTableOne(data = table1data)
+table1(~ DefRace + DefGender + DefEstimatedAge + DefRepByCounsel + ChargesCategorized + Assault.Violent.DV + Drug.Related + ProsCashBail + CashBailSet + CaseResolved + Result | WhichCourt, data = table1data)
 ```
 
 
@@ -131,9 +131,6 @@ cw %>%
 
 
 ```{r prbonds}
-
-
-table(cw$Bondsetbycourt)
 
 cw %>%  
   group_by(WhichCourt) %>%
