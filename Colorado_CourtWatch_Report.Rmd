@@ -102,9 +102,9 @@ cw %>%
   summarize(count= n()) %>%
   ungroup() %>%
   mutate(percent = count/n*100) %>%
-  mutate(labelq = ifelse(is.na(ChargesCategorized) == TRUE, paste0(n, " Cases Charged"), "")
+  mutate(labelq = ifelse(ChargesCategorized == "Other", paste0(n, " Cases Charged"), "")
          ) %>%
-  filter(is.na(WhichCourt) == FALSE) %>%
+  filter(is.na(WhichCourt) == FALSE, is.na(ChargesCategorized) == FALSE) %>%
   
   ggplot( aes(x = reorder(WhichCourt, percent), y = percent, fill = reorder(ChargesCategorized, percent))) + 
   geom_bar(stat = "identity", position = "dodge", alpha = .8, color = "black") +
