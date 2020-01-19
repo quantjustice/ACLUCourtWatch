@@ -6,25 +6,168 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, fig.width = 8)
+library(tidyverse)
+library(tableone)
+library(knitr)
+library(kableExtra)
+
+setwd("/Volumes/GoogleDrive/My Drive/QJL/ACLU Court Watch") 
+cw = read_csv("courtwatch_clean.csv")
+
 ```
 
-## R Markdown
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+# Dataset Descriptives
+```{r descriptors}
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+table1data <-
+cw %>% 
+  select(
+  WhichCourt,
+  DefRace,
+  DefGender,
+  DefEstimatedAge,
+  DefRepByCounsel,
+  ChargesCategorized,
+  Assault.Violent.DV,
+  Drug.Related,
+  ProsCashBail,
+  CashBailSet,
+#  CourtWatchername,
+#  Judgeslastname,
+  CaseResolved,
+  Result
+#  DefenseBondRequest,
+#  ProsecutionBondRequest,
+#  Bondsetbycourt
+) %>%
+  mutate(
+    WhichCourt = fct_explicit_na(WhichCourt),
+    Drug.Related = fct_explicit_na( fct_recode(as.factor(Drug.Related), "Yes" = "1", "No" = "0" )) ,
+    Assault.Violent.DV = fct_explicit_na( fct_recode(as.factor(Assault.Violent.DV), "Yes" = "1", "No" = "0" )) ,
+    DefRepByCounsel = fct_explicit_na( fct_recode(as.factor(DefRepByCounsel), "Yes" = "1", "No" = "0" )) ,
+    CashBailSet = fct_explicit_na( fct_recode(as.factor(CashBailSet), "Yes" = "1", "No" = "0" )) ,
+    ProsCashBail = fct_explicit_na( fct_recode(as.factor(ProsCashBail), "Yes" = "1", "No" = "0" ) ),
+    CaseResolved =  fct_explicit_na(   fct_recode(as.factor(CaseResolved), "Yes" = "1", "No" = "0" )),
+    Result = fct_explicit_na(Result),
+    ChargesCategorized = fct_explicit_na(ChargesCategorized)
+)
 
-```{r cars}
-summary(cars)
+CreateTableOne(data = table1data)
 ```
 
-## Including Plots
 
-You can also embed plots, for example:
+# What Offenses Are Charged By What Courts?
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r chargecounts, echo=FALSE}
+
+
+
+cw %>%  
+  group_by( WhichCourt, ChargesCategorized) %>%
+  summarize(count= n()) %>%
+  filter(is.na(WhichCourt) == FALSE) %>%
+  ggplot( aes(x = reorder(ChargesCategorized, count), y = count, fill = reorder(ChargesCategorized, count))) + 
+  geom_bar(stat = "identity", position = "dodge", alpha = .8, color = "black") +
+  
+  ggtitle('Offenses Charged by Court (Counts)') +
+  theme(
+    plot.title = element_text( face="bold", hjust = 0.5 ),
+    legend.title = element_text(),
+    legend.position = "none",
+    axis.title.x = element_text(vjust=-2),
+    axis.title.y = element_text(vjust= 2),
+    axis.text.x=element_text(angle = 90),
+
+    axis.ticks.x = element_blank()
+    
+  )+ 
+  scale_y_continuous(labels = function(x) paste0(round(x)), expand = c(0, 0 ), limits = c(-1, 450)) +
+  geom_text(aes(label= paste0(round(count)), y = count+20), position = position_dodge(width = .9), size = 4 ) +
+  labs(x="Court", y="Number Charges", fill = "Charge Type")  +
+  coord_cartesian(clip = 'off')+
+  scale_fill_brewer(palette="Set1") +
+  facet_wrap(~WhichCourt)
+
+
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+```{r chargedistributions, echo=FALSE, fig.width = 12}
+
+cw %>%  
+  group_by( WhichCourt) %>%
+  add_tally() %>%
+  group_by( WhichCourt, n, ChargesCategorized) %>%
+  summarize(count= n()) %>%
+  ungroup() %>%
+  mutate(percent = count/n*100) %>%
+  mutate(labelq = ifelse(is.na(ChargesCategorized) == TRUE, paste0(n, " Cases Charged"), "")
+         ) %>%
+  filter(is.na(WhichCourt) == FALSE) %>%
+  
+  ggplot( aes(x = reorder(WhichCourt, percent), y = percent, fill = reorder(ChargesCategorized, percent))) + 
+  geom_bar(stat = "identity", position = "dodge", alpha = .8, color = "black") +
+  
+  ggtitle('Percent of Offenses by Charge and Court') +
+  theme(
+    plot.title = element_text( face="bold", hjust = 0.5 ),
+    legend.title = element_text(),
+  #  legend.position = 
+    axis.title.x = element_text(vjust=-2),
+    axis.title.y = element_text(vjust= 2),
+    axis.text.x=element_text(vjust=-3),
+    axis.ticks.x = element_blank()
+    
+  )+ 
+  scale_y_continuous(labels = function(x) paste0(round(x), "%"), expand = c(0, 0 ), limits = c(-1, 45)) +
+  geom_text(aes(label= paste0(round(percent), "%"), y = percent+0.5), position = position_dodge(width = .9), size = 3  ) +
+  geom_text(aes(label= paste0(labelq ),  y = 0), vjust = 3, size = 3 ) +
+  labs(x="Court", y="Offenses Charged, %", fill = "Offenses")  +
+  coord_cartesian(clip = 'off')+
+  scale_fill_brewer(palette="Set1")
+
+```
+
+
+```{r prbonds}
+
+
+table(cw$Bondsetbycourt)
+
+cw %>%  
+  group_by(WhichCourt) %>%
+  add_tally() %>%
+  group_by( WhichCourt, n, Bondsetbycourt) %>%
+  summarize(count= n()) %>%
+  ungroup() %>%
+  mutate(percent = count/n*100) %>%
+  spread(Bondsetbycourt, percent, fill = 0) %>%
+  group_by(WhichCourt, n) %>% 
+  summarize( percent = sum(`Personal Recognizance (PR)`)) %>%
+  mutate(pr_count = percent * n/100) %>%
+  filter(is.na(WhichCourt) == FALSE) %>%
+  
+  ggplot( aes(x = reorder(WhichCourt, percent), y = percent) )+ 
+  geom_bar(stat = "identity", position = "dodge", alpha = .8, color = "black") +
+  
+  ggtitle('Use of Personal Recognizance (PR) Bonds, %') +
+  theme(
+    plot.title = element_text( face="bold", hjust = 0.5 ),
+    legend.title = element_text(),
+  #  legend.position = 
+    axis.title.x = element_text(vjust=-2),
+    axis.title.y = element_text(vjust= 2),
+    axis.text.x=element_text(vjust=-3),
+    axis.ticks.x = element_blank()
+    
+  )+ 
+  scale_y_continuous(labels = function(x) paste0(round(x), "%"), expand = c(0, 0 ), limits = c(-1, 75)) +
+  geom_text(aes(label= paste0(round(percent), "%", " ", pr_count, " Cases"), y = percent+2), position = position_dodge(width = .9), size = 3  ) +
+  geom_text(aes(label= paste0(n, " Cases in Court"),  y = 0), vjust = 2, size = 3 ) +
+  labs(x="Court", y="PR Bonds, %")  +
+  coord_cartesian(clip = 'off')+
+  scale_fill_brewer(palette="Set1")
+
+```
+
