@@ -63,10 +63,6 @@ label(table1data$Assault.Violent.DV) <- "Violent Crime, Assault, or DV"
 label(table1data$Drug.Related) <- "Drug Related"
 label(table1data$CashBailSet) <- "Cash Bail Set"
 label(table1data$CaseResolved) <- "Case Resolved"
-
-
-
-
 label(table1data$ProsCashBail) <- "Prosecution Requests Cash Bail"
 
 
@@ -108,7 +104,8 @@ cw %>%
 
 
 ```
-
+<br>
+<br>
 ```{r chargedistributions, echo=FALSE, fig.width = 12}
 
 cw %>%  
@@ -137,15 +134,18 @@ cw %>%
     
   )+ 
   scale_y_continuous(labels = function(x) paste0(round(x), "%"), expand = c(0, 0 ), limits = c(-1, 45)) +
-  geom_text(aes(label= paste0(round(percent), "%"), y = percent+0.5), position = position_dodge(width = .9), size = 3  ) +
-  geom_text(aes(label= paste0(labelq ),  y = 0), vjust = 3, size = 3 ) +
+  geom_text(aes(label= paste0(round(percent), "%"), y = percent+1), position = position_dodge(width = .9), size = 3  ) +
+  geom_text(aes(label= paste0(labelq ),  y = 0), vjust = 2.5, size = 3 ) +
   labs(x="Court", y="Offenses Charged, %", fill = "Offenses")  +
   coord_cartesian(clip = 'off')+
   scale_fill_brewer(palette="Set1")
 
 ```
+<br>
+<br>
 
 
+# Use of PR Bonds
 ```{r prbonds}
 
 cw %>%  
