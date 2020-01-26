@@ -4,6 +4,7 @@ library(readxl)
 library(tidyverse)
 library(tools)
 
+# setwd("/Volumes/GoogleDrive/My Drive/QJL/ACLU Court Watch")
 # read in data
 cw <- read_excel("Court Watching Forms.xlsx", skip=2, col_names = F)
 
@@ -238,13 +239,13 @@ cw %>%
         grepl("ASSAULT", Charges_clean, fixed = TRUE ) == TRUE  ~ "Assault/Violent Offense/DV",
         grepl("ASSUALT", Charges_clean, fixed = TRUE ) == TRUE  ~ "Assault/Violent Offense/DV",
         grepl("RAPE", Charges_clean, fixed = TRUE ) == TRUE  ~ "Assault/Violent Offense/DV",
-        grepl("DRUG", cw_charges$Charges_clean, fixed = TRUE ) == TRUE ~ "Drug Offense",
-        grepl("METH", cw_charges$Charges_clean, fixed = TRUE ) == TRUE ~ "Drug Offense",
-        grepl("SUBSTANCE", cw_charges$Charges_clean, fixed = TRUE ) == TRUE ~ "Drug Offense",
-        grepl("MARIJUANA", cw_charges$Charges_clean, fixed = TRUE ) == TRUE ~ "Drug Offense",
-        grepl("ALCOHOL", cw_charges$Charges_clean, fixed = TRUE ) == TRUE ~ "Alcohol/DUI",
-        grepl("DUI", cw_charges$Charges_clean, fixed = TRUE ) == TRUE ~ "Alcohol/DUI",
-        grepl("DRIVING UNDER THE INFLUENCE", cw_charges$Charges_clean, fixed = TRUE ) == TRUE ~ "Alcohol/DUI",
+        grepl("DRUG", Charges_clean, fixed = TRUE ) == TRUE ~ "Drug Offense",
+        grepl("METH", Charges_clean, fixed = TRUE ) == TRUE ~ "Drug Offense",
+        grepl("SUBSTANCE", Charges_clean, fixed = TRUE ) == TRUE ~ "Drug Offense",
+        grepl("MARIJUANA", Charges_clean, fixed = TRUE ) == TRUE ~ "Drug Offense",
+        grepl("ALCOHOL", Charges_clean, fixed = TRUE ) == TRUE ~ "Alcohol/DUI",
+        grepl("DUI", Charges_clean, fixed = TRUE ) == TRUE ~ "Alcohol/DUI",
+        grepl("DRIVING UNDER THE INFLUENCE", Charges_clean, fixed = TRUE ) == TRUE ~ "Alcohol/DUI",
         grepl("PETTY", Charges_clean, fixed = TRUE ) == TRUE  ~ "Poverty Related/Petty",
         grepl("PROSTITUTION", Charges_clean, fixed = TRUE ) == TRUE  ~ "Poverty Related/Petty",
         grepl("PROSITUTION", Charges_clean, fixed = TRUE ) == TRUE  ~ "Poverty Related/Petty",
@@ -301,13 +302,13 @@ cw %>%
                   )))),
     
     Drug.Related = 
-       ifelse(grepl("DRUG", cw_charges$Charges_clean, fixed = TRUE ) == TRUE, 1,
+       ifelse(grepl("DRUG", Charges_clean, fixed = TRUE ) == TRUE, 1,
               ifelse(
-                   grepl("METH", cw_charges$Charges_clean, fixed = TRUE ) == TRUE, 1,
+                   grepl("METH", Charges_clean, fixed = TRUE ) == TRUE, 1,
                ifelse(
-                   grepl("SUBSTANCE", cw_charges$Charges_clean, fixed = TRUE ) == TRUE, 1, 
+                   grepl("SUBSTANCE", Charges_clean, fixed = TRUE ) == TRUE, 1, 
                ifelse(
-                   grepl("MARIJUANA", cw_charges$Charges_clean, fixed = TRUE ) == TRUE, 1 , 0))))
+                   grepl("MARIJUANA", Charges_clean, fixed = TRUE ) == TRUE, 1 , 0))))
     ) 
   
 # The following Charges still need to be categorized 
@@ -315,7 +316,6 @@ cw_charges %>%
   filter(is.na(ChargesCategorized) == TRUE) %>%
   group_by(Charges_clean) %>%
   summarize(n = n()) %>% View()
-
 
 
 ############
@@ -327,6 +327,24 @@ cw %>%
       select(RespondentID, ChargesCategorized, Assault.Violent.DV, Drug.Related), by = "RespondentID"
     
   )
+
+
+
+
+#--------- Clean Bond -----------# 
+
+cw_bond <-
+cw %>%
+select(RespondentID, Bondsetbycourt, CourtSetBondAmount) %>%
+  mutate(Dollar_Sign = str_match(CourtSetBondAmount, ".*$.*") ) 
+  
+  
+gsub(paste0("[^",paste0(c(0:9), ".", ",", "x", collapse=""), "]+"), " ", cw$CourtSetBondAmount)
+
+
+
+
+  View(cw_bond)
 
 
 write.csv(cw, file = "courtwatch_clean.csv")
