@@ -113,8 +113,8 @@ cw %>%
         grepl("METH", Charges_clean, fixed = TRUE ) == TRUE ~ "Drug Offense",
         grepl("SUBSTANCE", Charges_clean, fixed = TRUE ) == TRUE ~ "Drug Offense",
         grepl("MARIJUANA", Charges_clean, fixed = TRUE ) == TRUE ~ "Drug Offense",
-        grepl("ALCOHOL", Charges_clean, fixed = TRUE ) == TRUE ~ "Alcohol/DUI",
         grepl("DUI", Charges_clean, fixed = TRUE ) == TRUE ~ "Alcohol/DUI",
+        grepl("ALCOHOL", Charges_clean, fixed = TRUE ) == TRUE ~ "Poverty Related/Petty",
         grepl("DRIVING UNDER THE INFLUENCE", Charges_clean, fixed = TRUE ) == TRUE ~ "Alcohol/DUI",
         grepl("PETTY", Charges_clean, fixed = TRUE ) == TRUE  ~ "Poverty Related/Petty",
         grepl("PROSTITUTION", Charges_clean, fixed = TRUE ) == TRUE  ~ "Poverty Related/Petty",
@@ -199,6 +199,9 @@ cw %>%
   )
 
 
+arb <- select(cw_charges, Charges_clean, ChargesCategorized)
+
+arb2 <- arb[str_detect(arb$Charges_clean, "ALCOHOL"),]
 
 
 #--------- Clean Bond -----------# 
