@@ -114,43 +114,43 @@ cw %>%
         grepl("SUBSTANCE", Charges_clean, fixed = TRUE ) == TRUE ~ "Drug Offense",
         grepl("MARIJUANA", Charges_clean, fixed = TRUE ) == TRUE ~ "Drug Offense",
         grepl("DUI", Charges_clean, fixed = TRUE ) == TRUE ~ "Alcohol/DUI",
-        grepl("ALCOHOL", Charges_clean, fixed = TRUE ) == TRUE ~ "Poverty Related/Petty",
         grepl("DRIVING UNDER THE INFLUENCE", Charges_clean, fixed = TRUE ) == TRUE ~ "Alcohol/DUI",
+        grepl("ALCOHOL", Charges_clean, fixed = TRUE ) == TRUE ~ "Poverty Related/Petty",
         grepl("PETTY", Charges_clean, fixed = TRUE ) == TRUE  ~ "Poverty Related/Petty",
-        grepl("PROSTITUTION", Charges_clean, fixed = TRUE ) == TRUE  ~ "Poverty Related/Petty",
-        grepl("PROSITUTION", Charges_clean, fixed = TRUE ) == TRUE  ~ "Poverty Related/Petty",
         grepl("SHOPLIFTING", Charges_clean, fixed = TRUE ) == TRUE  ~ "Poverty Related/Petty",
         grepl("THEFT", Charges_clean, fixed = TRUE ) == TRUE  ~ "Poverty Related/Petty",
         grepl("TRESPASS", Charges_clean, fixed = TRUE ) == TRUE  ~ "Poverty Related/Petty",
         grepl("TRESSPASS", Charges_clean, fixed = TRUE ) == TRUE  ~ "Poverty Related/Petty",
         grepl("MISCHIEF", Charges_clean, fixed = TRUE ) == TRUE  ~ "Poverty Related/Petty",
         grepl("DISORDERLY CONDUCT", Charges_clean, fixed = TRUE ) == TRUE  ~ "Poverty Related/Petty",
-        grepl("INDECENT EXPOSURE", Charges_clean, fixed = TRUE ) == TRUE  ~ "Poverty Related/Petty",
         grepl("DISTURB", Charges_clean, fixed = TRUE ) == TRUE  ~ "Poverty Related/Petty",
         grepl("PUBLIC", Charges_clean, fixed = TRUE ) == TRUE  ~ "Poverty Related/Petty",
         grepl("PARK VIOLATION", Charges_clean, fixed = TRUE ) == TRUE  ~ "Poverty Related/Petty",
         grepl("FALSE", Charges_clean, fixed = TRUE ) == TRUE  ~ "Poverty Related/Petty",
         grepl("PANHANDLING", Charges_clean, fixed = TRUE ) == TRUE  ~ "Poverty Related/Petty",
         grepl("DESTRUCTION OF", Charges_clean, fixed = TRUE ) == TRUE  ~ "Poverty Related/Petty",
+        grepl("CURFEW", Charges_clean, fixed = TRUE ) == TRUE  ~ "Poverty Related/Petty",
         grepl("DUR", Charges_clean, fixed = TRUE ) == TRUE  ~ "Violation of Court Restrictions",
         grepl("LICENSE", Charges_clean, fixed = TRUE ) == TRUE  ~ "Violation of Court Restrictions",
         grepl("LICENCE", Charges_clean, fixed = TRUE ) == TRUE  ~ "Violation of Court Restrictions",
-        grepl("CURFEW", Charges_clean, fixed = TRUE ) == TRUE  ~ "Violation of Court Restrictions",
         grepl("VIOLATION OF", Charges_clean, fixed = TRUE ) == TRUE  ~ "Violation of Court Restrictions",
         grepl("VIOLATION OF", Charges_clean, fixed = TRUE ) == TRUE  ~ "Violation of Court Restrictions",
         grepl("PROBATION", Charges_clean, fixed = TRUE ) == TRUE  ~ "Violation of Court Restrictions",
         grepl("COURT ORDER", Charges_clean, fixed = TRUE ) == TRUE  ~ "Violation of Court Restrictions",
         grepl("DRIVING UNDER RESTRAINT", Charges_clean, fixed = TRUE ) == TRUE  ~ "Violation of Court Restrictions",
-        grepl("2ND", Charges_clean, fixed = TRUE ) == TRUE  ~ "Violation of Court Restrictions",
         grepl("CARELESS", Charges_clean, fixed = TRUE ) == TRUE  ~ "Driving Violations",
         grepl("SPEEDING", Charges_clean, fixed = TRUE ) == TRUE  ~ "Driving Violations",
         grepl("INSURANCE", Charges_clean, fixed = TRUE ) == TRUE  ~ "Driving Violations",
         grepl("NO BRAKES", Charges_clean, fixed = TRUE ) == TRUE  ~ "Driving Violations",
-        grepl("WEAPON", Charges_clean, fixed = TRUE ) == TRUE  ~ "Other",
-        grepl("FIREARM", Charges_clean, fixed = TRUE ) == TRUE  ~ "Other",
+        grepl("PROSTITUTION", Charges_clean, fixed = TRUE ) == TRUE  ~ "Other",
+        grepl("PROSITUTION", Charges_clean, fixed = TRUE ) == TRUE  ~ "Other",
+        grepl("INDECENT EXPOSURE", Charges_clean, fixed = TRUE ) == TRUE  ~ "Other",
         grepl("THREATS", Charges_clean, fixed = TRUE ) == TRUE  ~ "Other",
         grepl("SEX OFFENDER", Charges_clean, fixed = TRUE ) == TRUE  ~ "Other",
         grepl("UNLAWFUL", Charges_clean, fixed = TRUE ) == TRUE  ~ "Other",
+        grepl("WEAPON", Charges_clean, fixed = TRUE ) == TRUE  ~ "Other",
+        grepl("KNIVES", Charges_clean, fixed = TRUE ) == TRUE  ~ "Other",
+        grepl("FIREARM", Charges_clean, fixed = TRUE ) == TRUE  ~ "Other",
         is.na(Charges_clean == TRUE) ~ "Unknown",
         grepl("T READ", Charges_clean, fixed = TRUE ) == TRUE  ~ "Unknown",
         grepl("WAIVED", Charges_clean, fixed = TRUE ) == TRUE  ~ "Unknown",
@@ -197,11 +197,6 @@ cw %>%
       select(RespondentID, ChargesCategorized, Assault.Violent.DV, Drug.Related), by = "RespondentID"
     
   )
-
-
-arb <- select(cw_charges, Charges_clean, ChargesCategorized)
-
-arb2 <- arb[str_detect(arb$Charges_clean, "ALCOHOL"),]
 
 
 #--------- Clean Bond -----------# 

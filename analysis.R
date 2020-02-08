@@ -71,17 +71,17 @@ dev.off()
 
 prop.table(table(cw$DefRep, cw$DefRace), 2)
 
-# pdf("counsel-race.pdf", width=6.5, height=4)
-# ggplot(cw, aes(DefRace, fill=factor(DefRep))) + 
-#   geom_bar(position="fill") + scale_y_continuous(labels=scales::percent) +
-#   scale_fill_manual(values=c(aclublues[3], "grey", aclublues[7])) +
-#   labs(title="Presence of Counsel by Race of Defendant", 
-#        subtitle="Colorado ACLU Court Watch Project (September - November 2019)",
-#        y="Percent of Cases", 
-#        x="Race of Defendant", 
-#        fill="Counsel", 
-#        caption="Data from the ACLU of Colorado")
-# dev.off()
+pdf("counsel-race.pdf", width=6.5, height=4)
+ggplot(cw, aes(DefRace, fill=factor(DefRep))) +
+  geom_bar(position="fill") + scale_y_continuous(labels=scales::percent) +
+  scale_fill_manual(values=c(aclublues[3], "grey", aclublues[7])) +
+  labs(title="Presence of Counsel by Race of Defendant",
+       subtitle="Colorado ACLU Court Watch Project (September - November 2019)",
+       y="Percent of Cases",
+       x="Race of Defendant",
+       fill="Counsel",
+       caption="Data from the ACLU of Colorado")
+dev.off()
 
 # What percent of people who plead at bond setting are represented by counsel?
 
