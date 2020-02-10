@@ -113,8 +113,8 @@ cw %>%
         grepl("METH", Charges_clean, fixed = TRUE ) == TRUE ~ "Drug Offense",
         grepl("SUBSTANCE", Charges_clean, fixed = TRUE ) == TRUE ~ "Drug Offense",
         grepl("MARIJUANA", Charges_clean, fixed = TRUE ) == TRUE ~ "Drug Offense",
-        grepl("DUI", Charges_clean, fixed = TRUE ) == TRUE ~ "Alcohol/DUI",
-        grepl("DRIVING UNDER THE INFLUENCE", Charges_clean, fixed = TRUE ) == TRUE ~ "Alcohol/DUI",
+        grepl("DUI", Charges_clean, fixed = TRUE ) == TRUE ~ "DUI",
+        grepl("DRIVING UNDER THE INFLUENCE", Charges_clean, fixed = TRUE ) == TRUE ~ "DUI",
         grepl("ALCOHOL", Charges_clean, fixed = TRUE ) == TRUE ~ "Poverty Related/Petty",
         grepl("PETTY", Charges_clean, fixed = TRUE ) == TRUE  ~ "Poverty Related/Petty",
         grepl("SHOPLIFTING", Charges_clean, fixed = TRUE ) == TRUE  ~ "Poverty Related/Petty",
@@ -160,6 +160,8 @@ cw %>%
         grepl("NO SHOW", Charges_clean, fixed = TRUE ) == TRUE  ~ "Unknown",
         
       ),
+    ChargesCategorized = ifelse(is.na(ChargesCategorized) == TRUE, "Other", ChargesCategorized),
+    
     Assault.Violent.DV = 
       ifelse(
         CaseInvDV == "Yes", 1,
@@ -170,7 +172,6 @@ cw %>%
         ifelse(
           grepl("RAPE", Charges_clean, fixed = TRUE ) == TRUE,1, 0
                   )))),
-    
     Drug.Related = 
        ifelse(grepl("DRUG", Charges_clean, fixed = TRUE ) == TRUE, 1,
               ifelse(

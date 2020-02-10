@@ -44,7 +44,7 @@ cw %>%
 #  Bondsetbycourt
 ) %>%
   mutate(
-    WhichCourt = fct_explicit_na(WhichCourt),
+   # WhichCourt = fct_explicit_na(WhichCourt),
     Drug.Related = fct_explicit_na( fct_recode(as.factor(Drug.Related), "Yes" = "1", "No" = "0" )) ,
     Assault.Violent.DV = fct_explicit_na( fct_recode(as.factor(Assault.Violent.DV), "Yes" = "1", "No" = "0" )) ,
     DefRepByCounsel = fct_explicit_na( fct_recode(as.factor(DefRepByCounsel), "Yes" = "1", "No" = "0" )) ,
@@ -67,7 +67,7 @@ label(table1data$CaseResolved) <- "Case Resolved"
 label(table1data$ProsCashBail) <- "Prosecution Requests Cash Bail"
 
 
-table1(~ DefRace + DefGender + DefEstimatedAge + DefRepByCounsel + ChargesCategorized + Assault.Violent.DV + Drug.Related + ProsCashBail + CashBailSet + CaseResolved + Result | WhichCourt, data = table1data)
+table1(~ DefRace + DefGender + DefEstimatedAge + DefRepByCounsel + ChargesCategorized + Assault.Violent.DV + Drug.Related + ProsCashBail + CashBailSet + CaseResolved + Result | WhichCourt, data = subset(table1data, !is.na(WhichCourt)))
 ```
 
 
