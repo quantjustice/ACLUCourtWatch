@@ -1,0 +1,12 @@
+factor,Factor
+Assault.Violent.DV,Assault/Violent Crime
+     DefGenderWoman,Female (vs. Male)
+       DefRaceAsian,Asian (vs. White)
+       DefRaceBlack,Black (vs. White)
+    DefRaceHispanic,Hispanic (vs. White)
+  DefRaceIndigenous,Indigenous (vs. White)
+     DefRaceUnknown,Race Unknown (vs. White)
+       Drug.Related,Drug Related Crime
+    Poverty.Related ,Poverty Related Crime
+DefRepNo Counsel,No Counsel
+DefRepUnknown,Counsel Status Unknown

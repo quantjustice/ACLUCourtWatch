@@ -192,23 +192,34 @@ cw_charges %>%
 ############
 cw <-
 cw %>%
-  select(-ChargesCategorized, -Assault.Violent.DV, -Drug.Related) %>%
   inner_join(
     cw_charges %>%
       select(RespondentID, ChargesCategorized, Assault.Violent.DV, Drug.Related), by = "RespondentID"
     
   )
 
+#### Final Cleaning ####
+cw$DefRep <- ifelse(cw$DefRepByCounsel=="1", "Counsel", "No Counsel")
+cw$DefRep <- ifelse(is.na(cw$DefRepByCounsel), "Unknown", cw$DefRep)
+cw$DefRep <- factor(cw$DefRep, levels=c("Counsel", "Unknown", "No Counsel"))
 
-#--------- Clean Bond -----------# 
 
-cw_bond <-
-cw %>%
-select(RespondentID, Bondsetbycourt, CourtSetBondAmount) %>%
-  mutate(Dollar_Sign = str_match(CourtSetBondAmount, ".*$.*") ) 
-  
-  
-gsub(paste0("[^",paste0(c(0:9), ".", ",", "x", collapse=""), "]+"), " ", cw$CourtSetBondAmount)
+# cw <- left_join(cw, cw_charges, by=c("RespondentID","Charges"))
+
+cw$Poverty.Related <- ifelse(cw$ChargesCategorized=="Poverty Related/Petty", 1, 0)
+
+cw$JudgeSet <- ifelse(cw$Bondsetbycourt %in% 
+                        c("Cash or Surety (C/S)", "Cash Only"), 
+                      "Judge Set Cash Bail", "Judge Set PR")
+cw$ProsAsk <- ifelse(cw$ProsecutionBondRequest %in% 
+                       c("Cash or Surety (C/S)", "Cash Only"), 
+                     "Prosecution Sought Cash Bail", "Prosecution Sought PR")
+
+cw$JudgeProsAgree <- with(cw, ifelse(CashBailSet=="1"&ProsCashBail=="1"|CashBailSet=="0"&ProsCashBail=="0", 1, 0))
+
+cw$ChargesCategorized <- ifelse(is.na(cw$ChargesCategorized), "Unknown", cw$ChargesCategorized)
+
+cw$DefGender <- with(cw, ifelse(!DefGender %in% c("Man", "Woman"), NA, as.character(DefGender)))
 
   
 save.image("ACLUCourtWatch.RData")

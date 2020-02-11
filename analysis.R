@@ -12,36 +12,19 @@ library(RColorBrewer)
 library(scales)
 library(table1)
 library(stargazer)
+library(cowplot)
 
-load("ACLUCourtWatch.Rdata")
+# setwd("/Volumes/GoogleDrive/My Drive/QJL/ACLU Court Watch")
+
+# load("ACLUCourtWatch.Rdata")
+# All cleaning moved to the read.R file. 
+
+cw <- read_csv("courtwatch_clean.csv")
+cleaning_labels <- read_csv("./ACLUCourtWatch/Cleaning_Labels.csv")
 
 aclublues <- brewer.pal(9, "Blues")
 blueyellow <- c("#003f5c", "#374c80", "#7a5195", "#bc5090", "#ef5675",
                 "#ff764a", "#ffa600")
-
-cw$DefRep <- ifelse(cw$DefRepByCounsel=="1", "Counsel", "No Counsel")
-cw$DefRep <- ifelse(is.na(cw$DefRepByCounsel), "Unknown", cw$DefRep)
-cw$DefRep <- factor(cw$DefRep, levels=c("Counsel", "Unknown", "No Counsel"))
-
-
-# cw <- left_join(cw, cw_charges, by=c("RespondentID","Charges"))
-
-cw$Poverty.Related <- ifelse(cw$ChargesCategorized=="Poverty Related/Petty", 1, 0)
-
-cw$JudgeSet <- ifelse(cw$Bondsetbycourt %in% 
-                        c("Cash or Surety (C/S)", "Cash Only"), 
-                      "Judge Set Cash Bail", "Judge Set PR")
-cw$ProsAsk <- ifelse(cw$ProsecutionBondRequest %in% 
-                       c("Cash or Surety (C/S)", "Cash Only"), 
-                     "Prosecution Sought Cash Bail", "Prosecution Sought PR")
-
-cw$JudgeProsAgree <- with(cw, ifelse(CashBailSet=="1"&ProsCashBail=="1"|CashBailSet=="0"&ProsCashBail=="0", 1, 0))
-
-cw$ChargesCategorized <- ifelse(is.na(cw$ChargesCategorized), "Unknown", cw$ChargesCategorized)
-
-cw$DefGender <- with(cw, ifelse(!DefGender %in% c("Man", "Woman"), NA, as.character(DefGender)))
-
-table(cw$DefGender)
 
 
 # ..................................................................................
@@ -489,15 +472,12 @@ label(table1data$ProsCashBail) <- "Prosecution Requests Cash Bail"
 
 table1(~ DefRace + DefGender + DefEstimatedAge + DefRepByCounsel + ChargesCategorized + Assault.Violent.DV + Drug.Related + ProsCashBail + CashBailSet + CaseResolved + Result | WhichCourt, data = table1data)
 
-######## What Offenses were Charged?
+######## What Offenses were Charged? #######
 
 prop.table(table(cw$ChargesCategorized))
 # Overall, 35% of offenses were Violent, only 4% were drug related, 28% were Poverty Related or Petty. 8% constituted violation of court restrictions. 
 
-
-
-pdf("charges-court.pdf", width=11, height=7)
-
+base.chart <-
 cw %>%  
   group_by( WhichCourt, ChargesCategorized) %>%
   summarize(count= n()) %>%
@@ -506,14 +486,14 @@ cw %>%
   
   ggplot( aes(x = reorder(WhichCourt, count), y = count, fill = reorder(ChargesCategorized, count))) + 
   geom_bar(stat = "identity", position = "dodge", alpha = .8, color = NA) +
-#  ggtitle('Offenses Charged by Court (Counts)') +
+  #  ggtitle('Offenses Charged by Court (Counts)') +
   theme(
     plot.title = element_text( face="bold", hjust = 0 ),
     legend.title = element_text(),
-   legend.position = "none",
+    legend.position = "none",
     axis.title.x = element_text(vjust=-2 ),
- #   axis.title.y = element_text(vjust= 2),
-   axis.text.y = element_text(angle = 90, hjust = 0.5, face = "bold"),    
+    #   axis.title.y = element_text(vjust= 2),
+    axis.text.y = element_text(angle = 90, hjust = 0.5, face = "bold"),    
     axis.ticks.x = element_blank()
   )+ 
   scale_y_continuous(labels = function(x) paste0(round(x)), expand = c(0, 0 ), limits = c(-1, 450)) +
@@ -523,10 +503,61 @@ cw %>%
        subtitle="Colorado ACLU Court Watch Project (September - November 2019)",
        caption="Data from the ACLU of Colorado")  +
   coord_cartesian(clip = 'off') +
-  scale_fill_manual(values=c(aclublues)) + 
+  scale_fill_manual(values=c( "grey",  rev(blueyellow))) + 
   coord_flip()
+
+
+inset_chart <-
+  subset(cw, !is.na(WhichCourt)) %>%
+  mutate(ChargesCategorized = fct_relevel(ChargesCategorized, "Assault/Violent Offense/DV", "Poverty Related/Petty", "Other", "Violation of Court Restrictions", "Unknown", "DUI", "Drug Offense", "Driving Violations")) %>%
+  mutate(WhichCourt = fct_relevel(WhichCourt, "Denver Municipal Court",   "Denver County Court", "Aurora Municipal Court")) %>%
+  
+  ggplot(  aes(x = WhichCourt, fill = as.factor(ChargesCategorized) ), alpha = .8)+ 
+  geom_bar(position="fill") + scale_y_continuous(labels=scales::percent) +
+  scale_fill_manual(values=c(  blueyellow, "grey")) + 
+  labs(# title="Distributions",
+       subtitle="Distribution of Charges",
+       y="",
+       x="",
+       fill="Offense") +
+ theme(legend.position = "none")
+
+plot.with.inset <- 
+  ggdraw() +
+  draw_plot(base.chart) +
+  draw_plot(inset_chart, x = .45, y = .15, width = .50, height = .6 )
+
+
+
+
+pdf("charges-court.pdf", width=11, height=7)
+
+plot.with.inset
   
 dev.off()
+
+
+table(cw$Assault.Violent.DV, cw$Drug.Related)
+
+
+
+pdf("charges-distribution-race", width=7, height=5)
+
+ggplot( subset(cw, !is.na(DefRace)), aes(x = DefRace, fill = as.factor(ChargesCategorized)) )+ 
+  geom_bar(position="fill") + scale_y_continuous(labels=scales::percent) +
+  scale_fill_manual(values=c(blueyellow, "grey")) + 
+  labs(title="Distribution of Charges by Race",
+       subtitle="Colorado ACLU Court Watch Project (Sep - Nov 2019)",
+       y="Percent of Defendants",
+       x="Race of Defendant",
+       fill="Offense",
+       caption="Data from the ACLU of Colorado")
+
+dev.off()
+
+
+
+
 
 ########### Use of PR Bonds ######
 prop.table(table(cw$Bondsetbycourt))*100 # 72.1487603
@@ -647,8 +678,24 @@ model1 <- glm(PRBond ~  DefRace + DefGender + Assault.Violent.DV +
 
  
 summary(model1)
+margins_model1 <- summary(margins(model1))
 
-xtable(summary(margins(model1)))
+model1_print <-
+margins_model1 %>%
+  inner_join(cleaning_labels) %>%
+  mutate(AME = round(AME,2),
+         Lower = round(lower,2),
+         Upper = round(upper, 1),
+         Effect = paste0(AME, " (", Lower, " - ", Upper, ")"),
+         p = round(p,2)) %>%
+ select(
+   Factor,
+   `AME (95% CI)` = Effect,
+   `P Value` = p
+   
+ )
+
+xtable(model1_print)
 
 
 
@@ -656,9 +703,9 @@ xtable(summary(margins(model1)))
 # Of those who received PR
 pdf("prbonds-race-court.pdf", width=5, height=4)
 
-  ggplot( subset(cw, Bondsetbycourt == "Personal Recognizance (PR)" & !is.na(WhichCourt)), aes(x = WhichCourt, fill = as.factor(DefRace)) )+ 
+  ggplot( subset(cw, Bondsetbycourt == "Personal Recognizance (PR)" & !is.na(WhichCourt)), aes(x = WhichCourt, fill = as.factor(ChargesCategorized)) )+ 
     geom_bar(position="fill") + scale_y_continuous(labels=scales::percent) +
-    scale_fill_manual(values=c(aclublues[c(3,5,6,8,9)], "grey")) + 
+    scale_fill_manual(values=c(blueyellow, "grey")) + 
     labs(title="Race of Those Released on PR Bonds by Court",
          subtitle="Colorado ACLU Court Watch Project (Sep - Nov 2019)",
          y="Percent of Individuals Released on PR",
