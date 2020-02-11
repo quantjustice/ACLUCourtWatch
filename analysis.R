@@ -715,7 +715,131 @@ pdf("prbonds-race-court.pdf", width=5, height=4)
 
 dev.off()
 
+colnames(cw)[grepl( "name", colnames(cw))]
+
+###### What different judges do
+pdf("prbonds-judge.pdf", width=5, height=4)
+
+cw %>%
+  mutate(Judge_Name = toupper(Judgeslastname)) %>%
+  separate_rows(Judge_Name, sep = "/") %>%
+  mutate(Judge =
+           case_when(
+             grepl("ANNI", Judge_Name) == TRUE ~ "ANNIS",
+             grepl("THOM", Judge_Name) == TRUE ~ "THOMSON",
+             grepl("CHER", Judge_Name) == TRUE ~ "CHERRY",
+             grepl("RAWL", Judge_Name) == TRUE ~ "ROWLINS",
+             grepl("ROLL", Judge_Name) == TRUE ~ "ROWLINS",
+             grepl("ROWL", Judge_Name) == TRUE ~ "ROWLINS",
+             grepl("KLINE", Judge_Name) == TRUE ~  "KLEIN",
+             grepl("COPPER", Judge_Name) == TRUE ~  "KOPPER"
+             
+           ),
+         Judge = ifelse(is.na(Judge) == TRUE, Judge_Name, Judge)
+  ) %>%
+  select(Judge, Bondsetbycourt) %>%
+  group_by( Judge, Bondsetbycourt) %>%
+  summarize(Freq = n()) %>%
+  filter(is.na(Bondsetbycourt) == FALSE ) %>%
+  ungroup() %>%
+  group_by(Judge) %>%
+  mutate(Total = sum(Freq), 
+         percent = round(Freq/Total *100,2)) %>%
+  filter(Total >50) %>%
+  filter(Bondsetbycourt == "Personal Recognizance (PR)") %>%
+
+ggplot( aes(x = reorder(Judge, percent), y = percent) )+ 
+  geom_bar(stat = "identity", position = "dodge", alpha = .8, color = "black", fill = aclublues[9]) +
+  
+  # ggtitle('Use of Personal Recognizance (PR) Bonds, %') +
+  theme(
+    plot.title = element_text( face="bold", hjust = 0 ),
+    legend.title = element_text(),
+    #  legend.position = 
+    axis.title.x = element_text(vjust=-2),
+    axis.title.y = element_text(vjust= 2),
+    axis.text.x=element_text(vjust=-3),
+    axis.ticks.x = element_blank()
+    
+  )+ 
+  scale_y_continuous(labels = function(x) paste0(round(x), "%"), expand = c(0, 0 ), limits = c(-1, 90)) +
+  geom_text(aes(label= paste0(round(percent), "%", " (", Freq, " Cases)"), y = percent+2), position = position_dodge(width = .9), size = 2  ) +
+  geom_text(aes(label= paste0(Total, " Cases"),  y = 0), vjust = 2, size = 2 ) +
+  labs(x="Judge", y="Percent of Cases",
+       title="PR Bonds Issued by Judge",
+       subtitle="Colorado ACLU Court Watch Project (Sep - Nov 2019)",
+       caption="Data from the ACLU of Colorado")  +
+  coord_cartesian(clip = 'off')
+dev.off()
+
+
+Judge_Data <-
+cw %>%
+  mutate(Judge_Name = toupper(Judgeslastname)) %>%
+  separate_rows(Judge_Name, sep = "/") %>%
+  mutate(Judge =
+           case_when(
+             grepl("ANNI", Judge_Name) == TRUE ~ "ANNIS",
+             grepl("THOM", Judge_Name) == TRUE ~ "THOMSON",
+             grepl("CHER", Judge_Name) == TRUE ~ "CHERRY",
+             grepl("RAWL", Judge_Name) == TRUE ~ "ROWLINS",
+             grepl("ROLL", Judge_Name) == TRUE ~ "ROWLINS",
+             grepl("ROWL", Judge_Name) == TRUE ~ "ROWLINS",
+             grepl("KLINE", Judge_Name) == TRUE ~  "KLEIN",
+             grepl("COPPER", Judge_Name) == TRUE ~  "KOPPER"
+             
+           ),
+         Judge = ifelse(is.na(Judge) == TRUE, Judge_Name, Judge)
+  )  %>%
+  filter(Judge %in% c("ANNIS", "BOLAND", "CHERRY", "KLEIN", "KOPPER", "ROWLINS"  )) %>%
+  mutate(PR = ifelse(Bondsetbycourt == "Personal Recognizance (PR)", 1, 0)) %>%
+  filter(is.na(PR) == FALSE) %>%
+  mutate(Violate.Restrictions = ifelse(ChargesCategorized == "Violation of Court Restrictions", 1, 0))
+
+pdf("judge-charges.pdf", width=8, height=4)
+
+ggplot( Judge_Data, aes(x = Judge, fill = as.factor(ChargesCategorized)) )+ 
+  geom_bar(position="fill") + scale_y_continuous(labels=scales::percent) +
+  scale_fill_manual(values=c(blueyellow, "grey")) + 
+  labs(title="Distribution of Charges for Cases Where Bail was Set",
+       subtitle="Colorado ACLU Court Watch Project (Sep - Nov 2019)",
+       y="Percent of Defendants",
+       x="Judge",
+       fill="Offense",
+       caption="Data from the ACLU of Colorado") + coord_flip()
+dev.off()
+
+
+judge_model <- 
+glm(PR ~ Judge + Assault.Violent.DV + Violate.Restrictions, data = Judge_Data, family = binomial())
+
+summary(margins(judge_model))
+
+
+judge_model <- 
+  glm(PR ~ Judge + Assault.Violent.DV + Violate.Restrictions + Poverty.Related+ Drug.Related , data = Judge_Data, family = binomial())
+
+summary(judge_model)
 
 
 
-pdf("prbonds-charge-court.pdf", width=5, height=4)
+margins_model_judge <- summary(margins(judge_model))
+
+
+model_judge_print <-
+  margins_model_judge %>%
+  inner_join(cleaning_labels) %>%
+  mutate(AME = round(AME,2),
+         Lower = round(lower,2),
+         Upper = round(upper, 1),
+         Effect = paste0(AME, " (", Lower, " - ", Upper, ")"),
+         p = round(p,2)) %>%
+  select(
+    Factor,
+    `AME (95% CI)` = Effect,
+    `P Value` = p
+    
+  )
+
+xtable(model_judge_print)
+
