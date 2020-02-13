@@ -794,7 +794,8 @@ cw %>%
   filter(Judge %in% c("ANNIS", "BOLAND", "CHERRY", "KLEIN", "KOPPER", "ROWLINS"  )) %>%
   mutate(PR = ifelse(Bondsetbycourt == "Personal Recognizance (PR)", 1, 0)) %>%
   filter(is.na(PR) == FALSE) %>%
-  mutate(Violate.Restrictions = ifelse(ChargesCategorized == "Violation of Court Restrictions", 1, 0))
+  mutate(Violate.Restrictions = ifelse(ChargesCategorized == "Violation of Court Restrictions", 1, 0),
+         DefRaceBlack = ifelse(DefRace == "Black", 1, 0))
 
 pdf("judge-charges.pdf", width=8, height=4)
 
@@ -813,13 +814,12 @@ dev.off()
 judge_model <- 
 glm(PR ~ Judge + Assault.Violent.DV + Violate.Restrictions, data = Judge_Data, family = binomial())
 
+summary(judge_model)
 summary(margins(judge_model))
 
 
 judge_model <- 
   glm(PR ~ Judge + Assault.Violent.DV + Violate.Restrictions + Poverty.Related+ Drug.Related , data = Judge_Data, family = binomial())
-
-summary(judge_model)
 
 
 
