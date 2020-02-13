@@ -14,7 +14,7 @@ library(table1)
 library(stargazer)
 library(cowplot)
 
-# setwd("/Volumes/GoogleDrive/My Drive/QJL/ACLU Court Watch")
+setwd("/Volumes/GoogleDrive/My Drive/QJL/ACLU Court Watch")
 
 # load("ACLUCourtWatch.Rdata")
 # All cleaning moved to the read.R file. 
@@ -164,13 +164,18 @@ arb <- subset(cw, DefBondArg.Defendantishomeless=="1") %>% group_by(ChargesCateg
 pdf("homeless-charge.pdf", width=8, height=4)
 ggplot(arb, aes(reorder(ChargesCategorized,n), n)) + 
   stat_summary(geom="bar", fun.y="sum", fill=aclublues[8]) + 
+  geom_text(aes(label = n, y = n + .75 )) +
   coord_flip() +
   labs(title="Homeless Individuals by Charge Category", 
        subtitle="Homeless as identified by defense bond argument (n=42)", 
        x="", 
        y="Number of Individuals", 
        caption="Data from the ACLU of Colorado") + 
-  theme(plot.margin = unit(c(0.5, 2,0.5,0.2), "cm"))
+  scale_y_continuous(labels = function(x) paste0(round(x)), expand = c(0, 0 ), limits = c(-1, 25)) +
+  theme(plot.margin = unit(c(0.5, 2,0.5,0.2), "cm"),
+        plot.title = element_text( face="bold", hjust = 0 )
+        
+        )
 dev.off()
 
 table(subset(cw, DefBondArg.Defendantishomeless=="1")$ChargesCategorized)
@@ -184,9 +189,9 @@ table(homeless$DefRace)
 # only sentences for guilty pleas
 table(cw$Result)
 guiltyplea <- subset(cw, Result=="Guilty plea")
-
+guiltyplea[,37:41]
 # graph sentences
-arb <- data.frame(count=apply(guiltyplea[,36:40], 2, sum))
+arb <- data.frame(count=apply(guiltyplea[,37:41], 2, sum))
 arb$sentence <- c("Jail Time", "Useful Public Service", "Restitution", "Fine", "Program Participation")
 
 pdf("sentence.pdf", width=7, height=4)
@@ -273,21 +278,45 @@ table(jailtime$WhichCourt)
 table(cw$WhichCourt)
 
 pdf("plea-which.pdf", width=6, height=4)
-arb <- data.frame(table(guiltyplea$WhichCourt)/table(cw$WhichCourt))
-ggplot(arb, aes(Var1, Freq)) + stat_summary(geom="bar", fun.y="sum", fill=aclublues[8]) + 
-  scale_y_continuous(labels=scales::percent, limits = c(0, 0.5)) +
-  labs(title="Percent of Individuals Pleading Guilty by Court",
-       subtitle="Colorado ACLU Court Watch Project (September - November 2019)",
-       y="Percent of Cases",
-       x="",
-       fill="Court",
-       caption="Data from the ACLU of Colorado")
+
+cw %>%
+  group_by(WhichCourt) %>%
+  add_tally %>%
+  group_by( WhichCourt, n, Result) %>%
+  summarize(count = n()) %>%
+  mutate(percent = count/n*100) %>%
+filter(Result == "Guilty plea", is.na(WhichCourt) == FALSE) %>%
+
+ggplot( aes(x = reorder(WhichCourt, percent), y = percent) )+ 
+  geom_bar(stat = "identity", position = "dodge", alpha = .8, color = "black", fill = aclublues[9]) +
+  
+  # ggtitle('Use of Personal Recognizance (PR) Bonds, %') +
+  theme(
+    plot.title = element_text( face="bold", hjust = 0 ),
+    legend.title = element_text(),
+    #  legend.position = 
+    axis.title.x = element_text(vjust=-2),
+    axis.title.y = element_text(vjust= 2),
+    axis.text.x=element_text(vjust=-3),
+    axis.ticks.x = element_blank()
+    
+  )+ 
+  scale_y_continuous(labels = function(x) paste0(round(x), "%"), expand = c(0, 0 ), limits = c(-1, 50)) +
+  geom_text(aes(label= paste0(round(percent), "%", " (", count, " Cases)"), y = percent+1), position = position_dodge(width = .9), size = 2  ) +
+  geom_text(aes(label= paste0(n, " Cases"),  y = 0), vjust = 2, size = 2 ) +
+  labs(x="Court", y="Percent of Cases",
+       title="Percent of Individuals Pleading Guilty by Court",
+       subtitle="Colorado ACLU Court Watch Project (Sep - Nov 2019)",
+       caption="Data from the ACLU of Colorado")  +
+  coord_cartesian(clip = 'off')
+  
 dev.off()
 
 # ..................................................................................
 
 # defense bond arguments
-defbondarg <- data.frame(count=apply(cw[,53:61], 2, sum))
+defbondarg <- data.frame(count=apply(cw[,54:62], 2, sum))
+
 defbondarg$why <- c("Defendant is homeless", "Defendant is unemployed", 
                     "Defendant can't afford bond", 
                 "Defendant needs release (school/work/family)", 
@@ -297,18 +326,22 @@ defbondarg$why <- c("Defendant is homeless", "Defendant is unemployed",
                 "Charge is non-violent", "Case evidence is weak")
 
 pdf("def-bond-arg.pdf", width=9, height=5)
+
 ggplot(defbondarg, aes(reorder(why,count), count)) + 
   stat_summary(geom="bar", fun.y="sum", fill=aclublues[8]) + 
+  geom_text(aes(label = count, y = count + 2), hjust = 0) +
   coord_flip() + scale_x_discrete(labels = function(x) str_wrap(x, width = 20)) +
   labs(title="Defense Bond Arguments by Frequency",
-       subtitle="Colorado ACLU Court Watch Project (September - November 2019)",
+       subtitle="Colorado ACLU Court Watch Project (Sep - Nov 2019)",
        y="Number of Cases",
        x="",
-       caption="Data from the ACLU of Colorado")
+       caption="Data from the ACLU of Colorado") +
+  scale_y_continuous( expand = c(0, 0 ), limits = c(-10, 200)) +
+  theme(plot.title = element_text( face="bold", hjust = 0 ))
 dev.off()
 
 # prosecution bond arguments
-prosbondarg <- data.frame(count=apply(cw[,73:78], 2, sum))
+prosbondarg <- data.frame(count=apply(cw[,74:79], 2, sum))
 prosbondarg$why <- c("Defendant has history of missing court",
                      "Defendant has extensive criminal history", 
                      "Defendant is a flight risk", 
@@ -319,12 +352,15 @@ prosbondarg$why <- c("Defendant has history of missing court",
 pdf("pros-bond-arg.pdf", width=9, height=5)
 ggplot(prosbondarg, aes(reorder(why,count), count)) + 
   stat_summary(geom="bar", fun.y="sum", fill=aclublues[8]) + 
-  coord_flip() + scale_x_discrete(labels = function(x) str_wrap(x, width = 20))+ 
+  geom_text(aes(label = count, y = count + 2), hjust = 0) +
+  coord_flip() + scale_x_discrete(labels = function(x) str_wrap(x, width = 20)) +
   labs(title="Prosecution Bond Arguments by Frequency",
-       subtitle="Colorado ACLU Court Watch Project (September - November 2019)",
+       subtitle="Colorado ACLU Court Watch Project (Sep - Nov 2019)",
        y="Number of Cases",
        x="",
-       caption="Data from the ACLU of Colorado")
+       caption="Data from the ACLU of Colorado") +
+  scale_y_continuous( expand = c(0, 0 ), limits = c(-10, 175)) +
+  theme(plot.title = element_text( face="bold", hjust = 0 ))
 dev.off()
 
 pros.arg.mod <- glm(CashBailSet ~ ProsBondArg.ThedefendanthasahistoryofmissingcourthaspriorFTAs + 
@@ -340,16 +376,16 @@ summary(pros.arg.mod)
 # ...........................................................................................
 
 # defense release conditions
-apply(cw[,45:51], 2, sum)
-defrelcond <- data.frame(count=apply(cw[,45:51], 2, sum))
+apply(cw[,46:52], 2, sum)
+defrelcond <- data.frame(count=apply(cw[,46:52], 2, sum))
 defrelcond$condition <- c("GPS", "Protection order", "Sobriety", 
                           "No guns", "Supervision", "Enhanced intensive supervision", 
                           "Admin only supervision")
 defrelcond$who <- "Defense"
 
 # prosecution release conditions
-apply(cw[,65:71], 2, sum)
-prosrelcond <- data.frame(count=apply(cw[,65:71], 2, sum))
+apply(cw[,66:72], 2, sum)
+prosrelcond <- data.frame(count=apply(cw[,66:72], 2, sum))
 prosrelcond$condition <- c("GPS", "Protection order", "Sobriety", 
                           "No guns", "Supervision", "Enhanced intensive supervision", 
                           "Admin only supervision")
@@ -357,8 +393,8 @@ prosrelcond$who <- "Prosecution"
 
 
 # court set release conditions
-apply(cw[,83:89], 2, sum)
-courtrelcond <- data.frame(count=apply(cw[,83:89], 2, sum))
+apply(cw[,85:90], 2, sum)
+courtrelcond <- data.frame(count=apply(cw[,84:90], 2, sum))
 courtrelcond$condition <- c("GPS", "Protection order", "Sobriety", 
                           "No guns", "Supervision", "Enhanced intensive supervision", 
                           "Admin only supervision")
@@ -370,13 +406,16 @@ relcond <- full_join(relcond, courtrelcond, by=names(defrelcond))
 pdf("counsel-bondcond.pdf", width=9, height=4)
 ggplot(subset(relcond, !who=="Court"), aes(x=who, y=count, fill=condition)) + 
   stat_summary(fun.y = "sum", geom="bar", position="dodge", alpha=0.9) +
+  geom_text(aes(label = count, y = count + 7.5, x = who), position = position_dodge(width = .9)) +
   scale_fill_manual(values=c(blueyellow)) +
   labs(title="Counsel Requested Bond Conditions by Frequency",
        subtitle="Colorado ACLU Court Watch Project (September - November 2019)",
        y="Number of Cases",
        x="",
        fill="Condition",
-       caption="Data from the ACLU of Colorado")
+       caption="Data from the ACLU of Colorado") +
+ theme(plot.title = element_text( face="bold", hjust = 0 ))
+
 dev.off()
 
 pdf("court-bondcond.pdf", width=7, height=5)
