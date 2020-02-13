@@ -26,6 +26,28 @@ aclublues <- brewer.pal(9, "Blues")
 blueyellow <- c("#003f5c", "#374c80", "#7a5195", "#bc5090", "#ef5675",
                 "#ff764a", "#ffa600")
 
+# ..................................................................................
+
+ggplot(cw, aes(DefRace, fill=ChargesCategorized)) + geom_bar(position="fill")
+ggplot(cw, aes(DefRace, fill=ChargesCategorized)) + geom_bar(position="dodge")
+
+race.court <- subset(cw, !is.na(WhichCourt)) %>% group_by(WhichCourt, DefRace) %>% count()
+
+pdf("race-court.pdf", width=10, height=4.75)
+ggplot(race.court, aes(WhichCourt, n, fill=DefRace)) + 
+  stat_summary(fun.y="sum", geom="bar", position="dodge") + 
+  scale_fill_manual(values=c(aclublues[c(3,4,5,7,9)], "grey")) + ylim(0,400) +
+  labs(title="Race Demographics by Court",
+       subtitle="Colorado ACLU Court Watch Project (September - November 2019)",
+       y="Percent of Cases",
+       x="Court",
+       fill="Race of Defendant",
+       caption="Data from the ACLU of Colorado") +
+  geom_text(aes(x=WhichCourt, y=n, label=n), position = position_dodge(width = 0.9), vjust=-0.25) +
+  theme(legend.position = "right")
+dev.off()
+
+xtable(100*prop.table(table(cw$DefRace, cw$WhichCourt),2))
 
 # ..................................................................................
 
@@ -102,7 +124,7 @@ ask.mod <- glm(ProsCashBail ~ DefRep + DefRace + DefGender + Assault.Violent.DV 
 summary(ask.mod)
 margins(ask.mod)
 stargazer(ask.mod1, ask.mod2, ask.mod)
-margins(ask.mod)
+xtable(data.frame(summary(margins(ask.mod))))
 
 
 # model of judge bond set
@@ -496,7 +518,7 @@ cw %>%
     axis.text.y = element_text(angle = 90, hjust = 0.5, face = "bold"),    
     axis.ticks.x = element_blank()
   )+ 
-  scale_y_continuous(labels = function(x) paste0(round(x)), expand = c(0, 0 ), limits = c(-1, 450)) +
+  scale_y_continuous(labels = function(x) paste0(round(x)), expand = c(0, 0 ), limits = c(-1, 480)) +
   geom_text(aes(label= paste0(round(count), " ", ChargesCategorized), y = count + 2), position = position_dodge(width = .9), size = 3, hjust = 0 ) +
   labs(x="", y="", fill = "Charge Type",
        title="Charges by Court",
@@ -514,21 +536,20 @@ inset_chart <-
   
   ggplot(  aes(x = WhichCourt, fill = as.factor(ChargesCategorized) ), alpha = .8)+ 
   geom_bar(position="fill") + scale_y_continuous(labels=scales::percent) +
-  scale_fill_manual(values=c(  blueyellow, "grey")) + 
+  scale_fill_manual(values=c(blueyellow, "grey")) + 
   labs(# title="Distributions",
        subtitle="Distribution of Charges",
        y="",
        x="",
-       fill="Offense") +
- theme(legend.position = "none")
+       fill="Offense") 
 
 plot.with.inset <- 
   ggdraw() +
   draw_plot(base.chart) +
   draw_plot(inset_chart, x = .45, y = .15, width = .50, height = .6 )
 
-
-
+tab <- with(subset(cw, !is.na(WhichCourt)), 100*prop.table(table(ChargesCategorized, WhichCourt),2))
+xtable(tab)
 
 pdf("charges-court.pdf", width=11, height=7)
 
